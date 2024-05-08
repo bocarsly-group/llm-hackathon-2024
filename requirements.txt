@@ -1,2 +1,4 @@
 datalab-api >= 0.2.1
-codeinterpreterapi ~= 0.1
+codeinterpreterapi[all] == 0.1.17
+jupyter ~= 1.0
+pip 
