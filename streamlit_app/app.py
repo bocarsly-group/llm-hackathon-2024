@@ -20,6 +20,9 @@ load_dotenv(find_dotenv())
 
 DATALAB_API_PROMPT: str = (Path(__file__).parent.parent / "prompts" / "datalab-api-prompt.md").read_text()
 MODEL_NAME = "claude-3-haiku-20240307"
+# MODEL_NAME = "claude-3-sonnet-20240229"
+# MODEL_NAME = "claude-3-opus-20240229"
+
 SYSTEM_PROMPT = f"""You are a virtual data managment assistant that helps materials chemists
 manage their experimental data and plan experiments. 
 You can use a code interpreter tool to assist you (only if needed). If you use the code interpreter, 
@@ -49,7 +52,7 @@ messages_template = ChatPromptTemplate.from_messages(
 )
 
 # st.set_page_config(layout="wide")
-st.title("Conversational Agent")
+st.title("Materials data anaylsis agent")
 
 # Initialize the session state for chat messages
 if "messages" not in st.session_state:
@@ -76,7 +79,11 @@ agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 # Display the chat history
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+        if message["role"] == "system":
+            with st.expander("Show system prompt", expanded=False):
+                st.write(message["content"])
+        else:
+            st.markdown(message["content"])
 
 # Capture the user's input
 question = st.chat_input("Give me a task or ask me any question")
