@@ -1,6 +1,6 @@
 datalab-api >= 0.2.1
 codeinterpreterapi[all] == 0.1.17
-codeboxapi @ git+https://github.com/ml-evs/codebox-api@ce46fa3
+codeboxapi @ git+https://github.com/ml-evs/codebox-api@41cddfb
 pip
 langchain-anthropic == 0.1.11
 
