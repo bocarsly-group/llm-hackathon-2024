@@ -179,7 +179,6 @@ class LLMThought:
         # output is printed later in on_tool_end
         import json
         code_from_json = json.loads(input_str.replace('\"', '\\"').replace("'", '"')).get('code', '')
-        breakpoint()
         code_input_str = f"```python\n{code_from_json}\n```"
         self._container.markdown(f"**Input:**\n\n{code_input_str}\n\n**Output:**")
 
