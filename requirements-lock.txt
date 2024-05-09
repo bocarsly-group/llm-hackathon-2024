@@ -64,7 +64,7 @@ click==8.1.7
     # via
     #   duckduckgo-search
     #   streamlit
-codeboxapi @ git+https://github.com/ml-evs/codebox-api@ce46fa3edb0a79e4eec0b41455fdbf9dad1b8f38
+codeboxapi @ git+https://github.com/ml-evs/codebox-api@41cddfbd9390b000100b66f45335a43e8870897b
     # via codeinterpreterapi
 codeinterpreterapi==0.1.17
 comm==0.2.2
