@@ -18,7 +18,7 @@ import streamlit as st
 
 from dotenv import load_dotenv, find_dotenv
 
-from tools import local_codebox_tool
+from tools import local_codebox_tool, LocalCodeBoxToolRunManager
 from streamlit_callback import CustomStreamlitCallbackHandler
 
 load_dotenv(find_dotenv())
@@ -31,6 +31,7 @@ You can use a code interpreter tool to assist you (only if needed).
 Here is some more info about the datalab API: {DATALAB_API_PROMPT}"""
 
 
+codebox = LocalCodeBoxToolRunManager.instance().codebox
 
 if MODEL_NAME.startswith("claude"):
     llm = ChatAnthropic(
@@ -50,34 +51,23 @@ messages_template = ChatPromptTemplate.from_messages(
     ]
 )
 
+# st.set_page_config(layout="wide")
 st.title("Conversational Agent")
 
 # Initialize the session state for chat messages
 if "messages" not in st.session_state:
     st.session_state.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
-# # Initialize the conversation memory
-# if "chat_history" not in st.session_state:
-#     st.session_state.chat_history = [{"role": "system", "content": SYSTEM_PROMPT}]
+if "files" not in st.session_state:
+    st.session_state.files = codebox.list_files()
 
+if st.session_state.files:
+    st.sidebar.write("Uploaded Files:")
+    for file in st.session_state.files:
+        with open(os.path.join(".codebox", file.name), "rb") as f:
+            btn = st.sidebar.download_button(label=file.name, data=f.read(), file_name=file.name, mime="image/png")
 
-search = DuckDuckGoSearchRun()
-# llm_math_chain = LLMMathChain(llm=llm, verbose=True)
-
-tools = [
-    local_codebox_tool,
-    # Tool(
-    #     name="Calculator",
-    #     func=llm_math_chain.run,
-    #     description="Useful for answering math questions.",
-    # ),
-    # Tool(
-    #     name="DuckDuckGo Search",
-    #     func=search.run,
-    #     description="Useful for internet searches when information isn't readily available.",
-    # ),
-    # codeboxtool,
-]
+tools = [local_codebox_tool]
 
 # bind tools
 llm_with_tools = llm.bind_tools(tools)
@@ -103,37 +93,12 @@ if question:
     st.session_state.messages.append({"role": "user", "content": question})
 
     # Set up the Streamlit callback handler
-    st_callback = CustomStreamlitCallbackHandler(
-        st.container(), max_thought_containers=20, expand_new_thoughts=True
-    )
+    st_callback = CustomStreamlitCallbackHandler(st.container(), max_thought_containers=20, expand_new_thoughts=True)
 
-    response = agent_executor.invoke(
-        {"chat_history": st.session_state.messages}, {"callbacks": [st_callback]}
-    )
+    response = agent_executor.invoke({"chat_history": st.session_state.messages}, {"callbacks": [st_callback]})
 
-    with st.chat_message("assistant"):
+    with sidebar.chat_message("assistant"):
         st.markdown(response["output"])
 
-    # # Generate the assistant's response
-    # with st.chat_message("assistant"):
-    #     # Set up the Streamlit callback handler
-    #     st_callback = StreamlitCallbackHandler(st.container())
-    #     # message_placeholder = st.empty()
-    #     full_response = ""
-
-    #     response = agent_executor.invoke({"chat_history": st.session_state.chat_history}, callbacks=[st_callback])
-    #     # breakpoint()
-
-    #     # # Simulate a streaming response with a slight delay
-    #     # for chunk in response["output"].split():
-    #     #     full_response += chunk + " "
-    #     #     time.sleep(0.05)
-    #     #     message_placeholder.markdown(full_response + "▌")
-
-    #     # Display the final response
-    #     message_placeholder.markdown(response["content"])
-
     # Save the assistant's response to the session state
-    st.session_state.messages.append(
-        {"role": "assistant", "content": response["output"]}
-    )
+    st.session_state.messages.append({"role": "assistant", "content": response["output"]})
