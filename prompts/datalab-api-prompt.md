@@ -7,7 +7,8 @@ according to some scientific schema, and then make a plot.
 
 The rest of this prompt contains the README for the datalab API package (called `datalab-api` on PyPI, accessible via module `datalab_api`), which you already have installed.
 
-Here is the README:
+When using this package, you MUST set the `DATALAB_API_KEY` as an environment variable.
+It may have already been set by the time you execute it.
 
 A simple Python API that can interact with [*datalab*](https://github.com/the-grey-group/datalab) instances.
 

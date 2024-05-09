@@ -2,21 +2,13 @@ import os
 from pathlib import Path
 import base64
 
-from langchain.tools import DuckDuckGoSearchRun
 from langchain.agents import create_tool_calling_agent, AgentExecutor
-from langchain.agents.tools import Tool
 from langchain_anthropic import ChatAnthropic
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.prompts.image import ImagePromptTemplate
 from langchain_core.messages import HumanMessage
 
-from langchain.agents import initialize_agent
-from langchain.chains import LLMMathChain
-from langchain.memory import ConversationBufferMemory
-from langchain.callbacks import StreamlitCallbackHandler
 import streamlit as st
-from st_multimodal_chatinput import multimodal_chatinput
 
 
 from dotenv import load_dotenv, find_dotenv
@@ -26,7 +18,9 @@ from streamlit_callback import CustomStreamlitCallbackHandler
 
 load_dotenv(find_dotenv())
 
-DATALAB_API_PROMPT: str = (Path(__file__).parent.parent / "prompts" / "datalab-api-prompt.md").read_text()
+DATALAB_API_PROMPT: str = (
+    Path(__file__).parent.parent / "prompts" / "datalab-api-prompt.md"
+).read_text()
 MODEL_NAME = "claude-3-haiku-20240307"
 SYSTEM_PROMPT = f"""You are a virtual data managment assistant that helps materials chemists
 manage their experimental data and plan experiments. 
@@ -70,7 +64,9 @@ if st.session_state.files:
     st.sidebar.write("Uploaded Files:")
     for file in st.session_state.files:
         with open(os.path.join(".codebox", file.name), "rb") as f:
-            btn = st.sidebar.download_button(label=file.name, data=f.read(), file_name=file.name, mime="image/png")
+            btn = st.sidebar.download_button(
+                label=file.name, data=f.read(), file_name=file.name, mime="image/png"
+            )
 
 tools = [local_codebox_tool]
 
@@ -108,7 +104,10 @@ if question:
                     "type": "text",
                     "text": question,
                 },
-                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{encoded_string}"}},
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{encoded_string}"},
+                },
             ]
         )
         print("CREATED A NEW MESSAGE:")
@@ -134,12 +133,18 @@ if question:
     st.session_state.messages.append({"role": "user", "content": message.content})
 
     # Set up the Streamlit callback handler
-    st_callback = CustomStreamlitCallbackHandler(st.container(), max_thought_containers=20, expand_new_thoughts=True)
+    st_callback = CustomStreamlitCallbackHandler(
+        st.container(), max_thought_containers=20, expand_new_thoughts=True
+    )
 
-    response = agent_executor.invoke({"chat_history": st.session_state.messages}, {"callbacks": [st_callback]})
+    response = agent_executor.invoke(
+        {"chat_history": st.session_state.messages}, {"callbacks": [st_callback]}
+    )
 
     with st.chat_message("assistant"):
         st.markdown(response["output"])
 
     # Save the assistant's response to the session state
-    st.session_state.messages.append({"role": "assistant", "content": response["output"]})
+    st.session_state.messages.append(
+        {"role": "assistant", "content": response["output"]}
+    )
