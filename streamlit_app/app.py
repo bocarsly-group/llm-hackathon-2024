@@ -18,9 +18,7 @@ from streamlit_callback import CustomStreamlitCallbackHandler
 
 load_dotenv(find_dotenv())
 
-DATALAB_API_PROMPT: str = (
-    Path(__file__).parent.parent / "prompts" / "datalab-api-prompt.md"
-).read_text()
+DATALAB_API_PROMPT: str = (Path(__file__).parent.parent / "prompts" / "datalab-api-prompt.md").read_text()
 MODEL_NAME = "claude-3-haiku-20240307"
 SYSTEM_PROMPT = f"""You are a virtual data managment assistant that helps materials chemists
 manage their experimental data and plan experiments. 
@@ -61,12 +59,10 @@ if "files" not in st.session_state:
     st.session_state.files = codebox.list_files()
 
 if st.session_state.files:
-    st.sidebar.write("Uploaded Files:")
+    st.sidebar.write("Files in codebox:")
     for file in st.session_state.files:
         with open(os.path.join(".codebox", file.name), "rb") as f:
-            btn = st.sidebar.download_button(
-                label=file.name, data=f.read(), file_name=file.name, mime="image/png"
-            )
+            btn = st.sidebar.download_button(label=file.name, data=f.read(), file_name=file.name, mime="image/png")
 
 tools = [local_codebox_tool]
 
@@ -96,34 +92,39 @@ uploaded_file = st.file_uploader("Choose a file")
 
 if question:
     if uploaded_file is not None:
-        encoded_string = base64.b64encode(uploaded_file.getvalue()).decode("utf-8")
+        # breakpoint()
+        file_bytes = uploaded_file.getvalue()
+        with open(os.path.join(".codebox", uploaded_file.name), "wb") as f:
+            f.write(file_bytes)
+
+        st.session_state.files = codebox.list_files()
+
+        encoded_string = base64.b64encode(file_bytes).decode("utf-8")
         # st.write(bytes_data)
-        message = HumanMessage(
-            content=[
-                {
-                    "type": "text",
-                    "text": question,
-                },
-                {
-                    "type": "image_url",
-                    "image_url": {"url": f"data:image/jpeg;base64,{encoded_string}"},
-                },
-            ]
-        )
-        print("CREATED A NEW MESSAGE:")
-        print(message.content)
+
+        if uploaded_file.type in ("image/jpeg", "image/png"):
+            message = HumanMessage(
+                content=[
+                    {
+                        "type": "text",
+                        "text": question,
+                    },
+                    {"type": "image_url", "image_url": {"url": f"data:{uploaded_file.type};base64,{encoded_string}"}},
+                ]
+            )
+
+        else:
+            message = HumanMessage(
+                content=[
+                    {
+                        "type": "text",
+                        "text": f"A file named {uploaded_file.name} was uploaded and can be accessed using code. {question}",
+                    }
+                ]
+            )
+
     else:
         message = HumanMessage(content=[{"type": "text", "text": question}])
-    # base64ImageMessage = HumanMessage(
-    #     content=[
-    #         {
-    #             "type": "image_url",
-    #             "image_url": "https://avatars.githubusercontent.com/u/126733545?s=200&v=4",
-    #         }
-    #     ]
-    # )
-
-    # print(base64ImageMessage)
 
     # Add the user's question to the chat container
     with st.chat_message("user"):
@@ -133,18 +134,12 @@ if question:
     st.session_state.messages.append({"role": "user", "content": message.content})
 
     # Set up the Streamlit callback handler
-    st_callback = CustomStreamlitCallbackHandler(
-        st.container(), max_thought_containers=20, expand_new_thoughts=True
-    )
+    st_callback = CustomStreamlitCallbackHandler(st.container(), max_thought_containers=20, expand_new_thoughts=True)
 
-    response = agent_executor.invoke(
-        {"chat_history": st.session_state.messages}, {"callbacks": [st_callback]}
-    )
+    response = agent_executor.invoke({"chat_history": st.session_state.messages}, {"callbacks": [st_callback]})
 
     with st.chat_message("assistant"):
         st.markdown(response["output"])
 
     # Save the assistant's response to the session state
-    st.session_state.messages.append(
-        {"role": "assistant", "content": response["output"]}
-    )
+    st.session_state.messages.append({"role": "assistant", "content": response["output"]})
