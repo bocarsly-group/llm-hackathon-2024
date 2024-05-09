@@ -6,7 +6,7 @@ You will need to an ANTHROPIC_API_KEY and a DATALAB_API_KEY.
 from codeinterpreterapi import CodeInterpreterSession, File, settings
 from pathlib import Path
 
-settings.MODEL = "claude-3-opus-20240229"
+settings.MODEL = "claude-3-haiku-20240307"
 settings.CUSTOM_PACKAGES = ["datalab-api"]
 
 README = """
