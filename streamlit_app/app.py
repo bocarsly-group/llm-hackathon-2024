@@ -97,7 +97,7 @@ if question:
 
     response = agent_executor.invoke({"chat_history": st.session_state.messages}, {"callbacks": [st_callback]})
 
-    with sidebar.chat_message("assistant"):
+    with st.chat_message("assistant"):
         st.markdown(response["output"])
 
     # Save the assistant's response to the session state
