@@ -56,3 +56,397 @@ with DatalabClient("https://public.api.odbx.science") as client:
     client.get_item(item_id="test1", load_blocks=True, display=True)
 
 ```
+
+Here is an abridged JSONSchema for a sample, that also has some info about other
+types.
+
+```json 
+{
+  "title": "Sample",
+  "description": "A model for representing an experimental sample.",
+  "type": "object",
+  "properties": {
+    "blocks_obj": {
+      "title": "Blocks Obj",
+      "default": {},
+      "type": "object"
+    },
+    "display_order": {
+      "title": "Display Order",
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "collections": {
+      "title": "Collections",
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Collection"
+      }
+    },
+    "revision": {
+      "title": "Revision",
+      "default": 1,
+      "type": "integer"
+    },
+    "revisions": {
+      "title": "Revisions",
+      "type": "object"
+    },
+    "creator_ids": {
+      "title": "Creator Ids",
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "creators": {
+      "title": "Creators",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Person"
+      }
+    },
+    "type": {
+      "title": "Type",
+      "default": "samples",
+      "const": "samples",
+      "pattern": "^samples$",
+      "type": "string"
+    },
+    "immutable_id": {
+      "title": "Immutable ID",
+      "type": "string"
+    },
+    "last_modified": {
+      "title": "Last Modified",
+      "type": "date",
+      "format": "date-time"
+    },
+    "relationships": {
+      "title": "Relationships",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/TypedRelationship"
+      }
+    },
+    "refcode": {
+      "title": "Refcode",
+      "minLength": 1,
+      "maxLength": 40,
+      "pattern": "^[a-z]{2,10}:(?:[a-zA-Z0-9]+|[a-zA-Z0-9][a-zA-Z0-9._-]+[a-zA-Z0-9])$",
+      "type": "string"
+    },
+    "item_id": {
+      "title": "Item Id",
+      "minLength": 1,
+      "maxLength": 40,
+      "pattern": "^(?:[a-zA-Z0-9]+|[a-zA-Z0-9][a-zA-Z0-9._-]+[a-zA-Z0-9])$",
+      "type": "string"
+    },
+    "description": {
+      "title": "Description",
+      "type": "string"
+    },
+    "date": {
+      "title": "Date",
+      "type": "date",
+      "format": "date-time"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "files": {
+      "title": "Files",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/File"
+      }
+    },
+    "file_ObjectIds": {
+      "title": "File Objectids",
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "chemform": {
+      "title": "Chemform",
+      "example": [
+        "Na3P",
+        "LiNiO2@C"
+      ],
+      "type": "string"
+    },
+    "synthesis_constituents": {
+      "title": "Synthesis Constituents",
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Constituent"
+      }
+    },
+    "synthesis_description": {
+      "title": "Synthesis Description",
+      "type": "string"
+    }
+  },
+  "required": [
+    "item_id"
+  ],
+  "definitions": {
+    "KnownType": {
+      "title": "KnownType",
+      "description": "An enumeration of the types of entry known by this implementation, should be made dynamic in the future.",
+      "enum": [
+        "samples",
+        "starting_materials",
+        "blocks",
+        "files",
+        "people",
+        "collections"
+      ],
+      "type": "string"
+    },
+    "File": {
+      "title": "File",
+      "description": "A model for representing a file that has been tracked or uploaded to datalab.",
+      "type": "object",
+      "properties": {
+        "revision": {
+          "title": "Revision",
+          "default": 1,
+          "type": "integer"
+        },
+        "revisions": {
+          "title": "Revisions",
+          "type": "object"
+        },
+        "creator_ids": {
+          "title": "Creator Ids",
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "creators": {
+          "title": "Creators",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Person"
+          }
+        },
+        "type": {
+          "title": "Type",
+          "default": "files",
+          "const": "files",
+          "pattern": "^files$",
+          "type": "string"
+        },
+        "immutable_id": {
+          "title": "Immutable ID",
+          "type": "string"
+        },
+        "last_modified": {
+          "title": "Last Modified",
+          "type": "date",
+          "format": "date-time"
+        },
+        "relationships": {
+          "title": "Relationships",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TypedRelationship"
+          }
+        },
+        "size": {
+          "title": "Size",
+          "description": "The size of the file on disk in bytes.",
+          "type": "integer"
+        },
+        "last_modified_remote": {
+          "title": "Last Modified Remote",
+          "description": "The last date/time at which the remote file was modified.",
+          "type": "date",
+          "format": "date-time"
+        },
+        "item_ids": {
+          "title": "Item Ids",
+          "description": "A list of item IDs associated with this file.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "blocks": {
+          "title": "Blocks",
+          "description": "A list of block IDs associated with this file.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "name": {
+          "title": "Name",
+          "description": "The filename on disk.",
+          "type": "string"
+        },
+        "extension": {
+          "title": "Extension",
+          "description": "The file extension that the file was uploaded with.",
+          "type": "string"
+        },
+        "original_name": {
+          "title": "Original Name",
+          "description": "The raw filename as uploaded.",
+          "type": "string"
+        },
+        "location": {
+          "title": "Location",
+          "description": "The location of the file on disk.",
+          "type": "string"
+        },
+        "url_path": {
+          "title": "Url Path",
+          "description": "The path to a remote file.",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "description": "The source of the file, e.g. 'remote' or 'uploaded'.",
+          "type": "string"
+        },
+        "time_added": {
+          "title": "Time Added",
+          "description": "The timestamp for the original file upload.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "metadata": {
+          "title": "Metadata",
+          "description": "Any additional metadata.",
+          "type": "object"
+        },
+        "representation": {
+          "title": "Representation"
+        },
+        "source_server_name": {
+          "title": "Source Server Name",
+          "description": "The server name at which the file is stored.",
+          "type": "string"
+        },
+        "source_path": {
+          "title": "Source Path",
+          "description": "The path to the file on the remote resource.",
+          "type": "string"
+        },
+        "is_live": {
+          "title": "Is Live",
+          "description": "Whether or not the file should be watched for future updates.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "item_ids",
+        "blocks",
+        "name",
+        "extension",
+        "time_added",
+        "is_live"
+      ]
+    },
+    "EntryReference": {
+      "title": "EntryReference",
+      "description": "A reference to a database entry by ID and type.\n\nCan include additional arbitarary metadata useful for\ninlining the item data.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "title": "Type",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "immutable_id": {
+          "title": "Immutable Id",
+          "type": "string"
+        },
+        "item_id": {
+          "title": "Item Id",
+          "minLength": 1,
+          "maxLength": 40,
+          "pattern": "^(?:[a-zA-Z0-9]+|[a-zA-Z0-9][a-zA-Z0-9._-]+[a-zA-Z0-9])$",
+          "type": "string"
+        },
+        "refcode": {
+          "title": "Refcode",
+          "minLength": 1,
+          "maxLength": 40,
+          "pattern": "^[a-z]{2,10}:(?:[a-zA-Z0-9]+|[a-zA-Z0-9][a-zA-Z0-9._-]+[a-zA-Z0-9])$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ]
+    },
+    "InlineSubstance": {
+      "title": "InlineSubstance",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "chemform": {
+          "title": "Chemform",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "Constituent": {
+      "title": "Constituent",
+      "description": "A constituent of a sample.",
+      "type": "object",
+      "properties": {
+        "item": {
+          "title": "Item",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/EntryReference"
+            },
+            {
+              "$ref": "#/definitions/InlineSubstance"
+            }
+          ]
+        },
+        "quantity": {
+          "title": "Quantity",
+          "minimum": 0,
+          "type": "number"
+        },
+        "unit": {
+          "title": "Unit",
+          "default": "g",
+          "type": "string"
+        }
+      },
+      "required": [
+        "item",
+        "quantity"
+      ]
+    }
+  }
+}
+```
