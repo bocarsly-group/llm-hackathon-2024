@@ -22,6 +22,10 @@ Potential applications:
       2. weird behaviour where syntactically invalid code is created for the first few iterations
     - Therefore, at least some time during this hackathon will be made making
       our API package more bot- (and hopefully human-)friendly, via more examples and more ergonomic tweaks (e.g., automatically pluralising item types if the singular is given).
+- [`streamlit_app/app.py`](https://github.com/bocarsly-group/llm-hackathon-2024/blob/main/streamlit_app) uses a hacked version of CodeBox to provide a chat UI and run generated code.
+  - We hacked it so that images/plots can be returned, as well as being able to copy the generate code for further human tweaking.
+  - With Anthropic models, it keeps trying to generate and execute code until it works.
+  - The session is persistent, so you can then ask it to do things with the variables it creates, although often it tries to start again from scratch anyway.
 
 
 ## Setup
