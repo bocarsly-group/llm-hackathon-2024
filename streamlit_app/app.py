@@ -2,8 +2,13 @@ import os
 import time
 
 from langchain.tools import DuckDuckGoSearchRun
+from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain.agents.tools import Tool
-from langchain import OpenAI
+from langchain_anthropic import ChatAnthropic
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+
+
 from langchain.agents import initialize_agent
 from langchain.chains import LLMMathChain
 from langchain.memory import ConversationBufferMemory
@@ -12,47 +17,69 @@ import streamlit as st
 
 
 from dotenv import load_dotenv, find_dotenv
+
+from tools import codeboxtool
+
 load_dotenv(find_dotenv())
 
-OpenAI_key = os.environ.get("OPENAI_API_KEY")
+MODEL_NAME = "claude-3-haiku-20240307"
+SYSTEM_PROMPT = """You are a virtual data managment assistant that helps materials chemists
+manage their experimental data and plan experiments. 
+You can use a code interpreter tool to assist you (only if needed)."""
+
+
+if MODEL_NAME.startswith("claude"):
+    llm = ChatAnthropic(
+        anthropic_api_key=os.environ.get("ANTHROPIC_API_KEY"),
+        model=MODEL_NAME,
+    )
+elif MODEL_NAME.startswith("gpt"):
+    llm = ChatOpenAI(
+        api_key=os.environ.get("OPENAI_API_KEY"),
+        model=MODEL_NAME,
+    )
+
+messages_template = ChatPromptTemplate.from_messages(
+    [
+        MessagesPlaceholder(variable_name="chat_history"),
+        MessagesPlaceholder(variable_name="agent_scratchpad"),
+    ]
+)
 
 st.title("Conversational Agent")
 
 # Initialize the session state for chat messages
 if "messages" not in st.session_state:
-    st.session_state.messages = []
+    st.session_state.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
-# Initialize the conversation memory
-if "memory" not in st.session_state:
-    st.session_state.memory = ConversationBufferMemory(memory_key="chat_history")
+# # Initialize the conversation memory
+# if "chat_history" not in st.session_state:
+#     st.session_state.chat_history = [{"role": "system", "content": SYSTEM_PROMPT}]
 
-# Initialize the language model and tools
-llm = OpenAI(temperature=0)
+
 search = DuckDuckGoSearchRun()
-llm_math_chain = LLMMathChain(llm=llm, verbose=True)
+# llm_math_chain = LLMMathChain(llm=llm, verbose=True)
 
 tools = [
-    Tool(
-        name="Calculator",
-        func=llm_math_chain.run,
-        description="Useful for answering math questions.",
-    ),
-    Tool(
-        name="DuckDuckGo Search",
-        func=search.run,
-        description="Useful for internet searches when information isn't readily available.",
-    )
+    # Tool(
+    #     name="Calculator",
+    #     func=llm_math_chain.run,
+    #     description="Useful for answering math questions.",
+    # ),
+    # Tool(
+    #     name="DuckDuckGo Search",
+    #     func=search.run,
+    #     description="Useful for internet searches when information isn't readily available.",
+    # ),
+    codeboxtool,
 ]
 
+# bind tools
+llm_with_tools = llm.bind_tools(tools)
+
 # Initialize the conversational agent
-conversational_agent = initialize_agent(
-    agent="conversational-react-description",
-    tools=tools,
-    llm=llm,
-    verbose=True,
-    max_iterations=10,
-    memory=st.session_state.memory
-)
+agent = create_tool_calling_agent(llm_with_tools, tools, messages_template)
+agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
 # Display the chat history
 for message in st.session_state.messages:
@@ -70,22 +97,32 @@ if question:
     # Save the user's message to the session state
     st.session_state.messages.append({"role": "user", "content": question})
 
-    # Generate the assistant's response
+    # Set up the Streamlit callback handler
+    st_callback = StreamlitCallbackHandler(st.container())
+
+    response = agent_executor.invoke({"chat_history": st.session_state.messages}, {"callbacks": [st_callback]})
+
     with st.chat_message("assistant"):
-        # Set up the Streamlit callback handler
-        st_callback = StreamlitCallbackHandler(st.container())
-        message_placeholder = st.empty()
-        full_response = ""
-        assistant_response = conversational_agent.run(question, callbacks=[st_callback])
+        st.markdown(response["output"])
 
-        # Simulate a streaming response with a slight delay
-        for chunk in assistant_response.split():
-            full_response += chunk + " "
-            time.sleep(0.05)
-            message_placeholder.markdown(full_response + "▌")
+    # # Generate the assistant's response
+    # with st.chat_message("assistant"):
+    #     # Set up the Streamlit callback handler
+    #     st_callback = StreamlitCallbackHandler(st.container())
+    #     # message_placeholder = st.empty()
+    #     full_response = ""
 
-        # Display the final response
-        message_placeholder.info(full_response)
+    #     response = agent_executor.invoke({"chat_history": st.session_state.chat_history}, callbacks=[st_callback])
+    #     # breakpoint()
+
+    #     # # Simulate a streaming response with a slight delay
+    #     # for chunk in response["output"].split():
+    #     #     full_response += chunk + " "
+    #     #     time.sleep(0.05)
+    #     #     message_placeholder.markdown(full_response + "▌")
+
+    #     # Display the final response
+    #     message_placeholder.markdown(response["content"])
 
     # Save the assistant's response to the session state
-    st.session_state.messages.append({"role": "assistant", "content": full_response})
+    st.session_state.messages.append({"role": "assistant", "content": response["output"]})
