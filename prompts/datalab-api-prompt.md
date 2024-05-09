@@ -27,15 +27,23 @@ from datalab_api import DatalabClient
 
 with DatalabClient("https://public.api.odbx.science") as client:
 
+    # Get the info about this datalab instance
+    client.get_info()
+
+    # Get the current user's info
+    client.authenticate()
+
     # List all items of a given type
     # Types can be 'samples' or 'starting_materials'
     items = client.get_items(item_type="samples")
 
     # Get more info on a particular item called 'test'
-    item = client.get_item(item_id="test")
+    # `display=True` will pretty print the response
+    item = client.get_item(item_id="test", display=True)
 
-    # Create a new item
-    client.create_item
+    # Create a new item with some data that matches the corresponding `item_type` schema
+    json_data = {"chemform": "NaCl"}
+    client.create_item(item_id="test_new", item_type="samples", item_data=json_data)
 
     # Attach a file to an item and get the uploaded ID
     file_response = client.upload_file(filepath="my_echem_data.mpr", item_id="test")
