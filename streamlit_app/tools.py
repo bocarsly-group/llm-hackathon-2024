@@ -102,16 +102,17 @@ class LocalCodeBoxToolRunManager:
         print(f"Code box obj ID: {id(self.codebox)}")
         print(f"Code box session ID: {self.codebox.session_id}")
         print("Code:\n", code)
-        outputs: list[CodeBoxOutput] = self.codebox.run(code)
+        outputs: list[CodeBoxOutput] | CodeBoxOutput = self.codebox.run(code)
 
         result = {}
 
+        if not isinstance(outputs, list):
+            self.code_log.append((code, outputs.content))
+            return {"text": outputs.content}
+
         for output in outputs:
 
-            try:
-                self.code_log.append((code, output.content))
-            except Exception:
-                pass
+            self.code_log.append((code, output.content))
             if not isinstance(output.content, str):
                 raise TypeError("Expected output.content to be a string.")
 
