@@ -52,13 +52,13 @@ requirements.
 Generate lock:
 
 ```shell
-uv pip-compile -r requirements.txt > requirements-lock.txt
+uv pip compile --prerelease=allow -r requirements.txt > requirements-lock.txt
 ```
 
 Install lock (`uv`):
 
 ```shell
-uv pip install -r requirements-lock.txt
+uv pip install ---prerelease=allow -r requirements-lock.txt
 ````
 
 or directly in your virtual environment:
