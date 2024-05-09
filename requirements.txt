@@ -4,10 +4,10 @@ codeboxapi @ git+https://github.com/ml-evs/codebox-api@f15ffc9
 pip
 langchain-anthropic == 0.1.11
 langchain == 0.1.19
+matplotlib
 
 # for the streamlit app
 streamlit == 1.34.00
-duckduckgo-search == 5.3.1
 numexpr==2.10.0
 
 
