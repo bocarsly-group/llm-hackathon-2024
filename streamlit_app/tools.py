@@ -18,7 +18,7 @@ from codeinterpreterapi import File
 settings.MAX_OUTPUT_LENGTH = 1000
 
 TOOL_DESCRIPTION = """Input a string of code to a ipython interpreter.
-Write the entire code in a single string.
+Write the entire code in a single-line string.
 This string can be really long, so you can use the `;` character to split lines.
 Start your code on the same line as the opening quote.
 Do not start your code with a line break.
@@ -94,7 +94,7 @@ class LocalCodeBoxToolRunManager:
         return cls._instance
 
     @classmethod
-    def _run_handler(cls, code: str) -> str:
+    def _run_handler(cls, code: str) -> dict[str, str | BytesIO]:
         """Run code in container and send the output to the user"""
 
 
@@ -102,50 +102,51 @@ class LocalCodeBoxToolRunManager:
         print(f"Code box obj ID: {id(self.codebox)}")
         print(f"Code box session ID: {self.codebox.session_id}")
         print("Code:\n", code)
-        output: CodeBoxOutput = self.codebox.run(code)
-        self.code_log.append((code, output.content))
+        outputs: list[CodeBoxOutput] = self.codebox.run(code)
 
-        if not isinstance(output.content, str):
-            raise TypeError("Expected output.content to be a string.")
+        result = {}
 
-        if output.type == "image/png":
-            filename = f"image-{uuid4()}.png"
-            file_buffer = BytesIO(base64.b64decode(output.content))
-            file_buffer.name = filename
-            self.output_files.append(File(name=filename, content=file_buffer.read()))
-            return f"Image {filename} got send to the user."
+        for output in outputs:
 
-        elif output.type == "error":
-            if "ModuleNotFoundError" in output.content:
-                if package := re.search(
-                    r"ModuleNotFoundError: No module named '(.*)'",
-                    output.content,
-                ):
-                    self.codebox.install(package.group(1))
-                    return (
-                        f"{package.group(1)} was missing but "
-                        "got installed now. Please try again."
-                    )
-            else:
-                # TODO: pre-analyze error to optimize next code generation
+            try:
+                self.code_log.append((code, output.content))
+            except Exception:
                 pass
-            if self.verbose:
-                print("Error:", output.content)
+            if not isinstance(output.content, str):
+                raise TypeError("Expected output.content to be a string.")
 
-        # elif modifications := get_file_modifications(code, self.llm):
-        #     for filename in modifications:
-        #         if filename in [file.name for file in self.input_files]:
-        #             continue
-        #         fileb = self.codebox.download(filename)
-        #         if not fileb.content:
-        #             continue
-        #         file_buffer = BytesIO(fileb.content)
-        #     file_buffer.name = filename
-        #     self.output_files.append(
-        #         File(name=filename, content=file_buffer.read())
-        #     )
+            if output.type in ("plain/text", "text"):
+                result["text"] = output.content
 
-        return output.content
+            if output.type == "image/png":
+                filename = f"image-{uuid4()}.png"
+                file_buffer = BytesIO(base64.b64decode(output.content))
+                file_buffer.name = filename
+                self.output_files.append(File(name=filename, content=file_buffer.read()))
+                result["b64-image"] = file_buffer
+
+            if "Unable to run BokehJS code because BokehJS library is missing" in output.content:
+                result["bokeh"] = output.content
+
+            if output.type == "error":
+                if "ModuleNotFoundError" in output.content:
+                    if package := re.search(
+                        r"ModuleNotFoundError: No module named '(.*)'",
+                        output.content,
+                    ):
+                        self.codebox.install(package.group(1))
+                        return {"text": (
+                            f"{package.group(1)} was missing but "
+                            "got installed now. Please try again."
+                        )}
+                else:
+                    # TODO: pre-analyze error to optimize next code generation
+                    pass
+                if self.verbose:
+                    print("Error:", output.content)
+
+
+        return result
 
 
 class CodeInput(BaseModel):
