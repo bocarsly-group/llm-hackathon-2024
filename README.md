@@ -1,12 +1,13 @@
 # llm-hackathon-2024
 
-Working repository for team datalab in the 2024 materials/chemistry LLM hackathon
+Working repository for Team [*datalab*](https://github.com/the-grey-group/datalab) in the [2024 LLM Hackathon for Applications in Materials & Chemistry](https://www.eventbrite.com/e/llm-hackathon-for-applications-in-materials-and-chemistry-tickets-868303598437).
 
 ## Plan
 
-Use an LLM-based agent to interact with the datalab API so we don't have to implement things ourselves (as developers of datalab).
+Create an LLM-based agent that can interact with the [datalab Python API](https://github.com/datalab-org/datalab-api) so we don't have to implement things ourselves (as developers of datalab).
+This follows on from our work on *Whinchat* 🐦 last year, where we integrated GPT-based models from OpenAI with [*datalab*](https://github.com/the-grey-group/datalab) such that users can interact conversationally with their raw data (see Jablonka *et al*., [0.1039/D3DD00113J](https://doi.org/10.1039/D3DD00113J)).
 
-Lots of potential applications:
+Potential applications:
 
 - Using datalab to parse datafiles, return e.g., dataframes then using the LLM to create plots of data we don't support as blocks, like comparing XRD data from multiple samples
 - Upload a picture of a lab notebook page, then use the LLM to read it and make the appropriate API call to add it to datalab
@@ -24,6 +25,8 @@ Lots of potential applications:
 
 
 ## Setup
+
+### Install dependencies
 
 Make a Python environment (with whatever method you prefer) and install the
 deps from the `requirements.txt` file, e.g., using the standard library:
@@ -63,3 +66,12 @@ or directly in your virtual environment:
 ```shell
 pip install -r requirements-lock.txt
 ```
+
+### Running the Streamlit app
+
+After dependencies have been installed, you can launch the Streamlit app with:
+
+```shell
+streamlit run streamlit_app/app.py
+```
+
