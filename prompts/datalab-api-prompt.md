@@ -34,13 +34,15 @@ with DatalabClient("https://public.api.odbx.science") as client:
     # Get the current user's info
     client.authenticate()
 
+    # Search for items with the string
+    items = client.search_items("search-values")
+
     # List all items of a given type
     # Types can be 'samples' or 'starting_materials'
     items = client.get_items(item_type="samples")
 
     # Get more info on a particular item called 'test'
-    # `display=True` will pretty print the response
-    item = client.get_item(item_id="test", display=True)
+    item = client.get_item(item_id="test")
 
     # Create a new item with some data that matches the corresponding `item_type` schema
     json_data = {"chemform": "NaCl"}
@@ -53,8 +55,11 @@ with DatalabClient("https://public.api.odbx.science") as client:
     # Create a data block for a sample, then show the plot
     client.create_data_block(item_id="test", file_ids=file_id)
 
-    # Now fetch the item again with blocks enabled and see the plot
-    client.get_item(item_id="test1", load_blocks=True, display=True)
+    # Download all files attached to a sample and return their paths
+    file_paths = client.get_item_files(item_id="test")
+
+    # Get the item graph, useful for finding relationships
+    graph = client.get_item_graph()
 
 ```
 

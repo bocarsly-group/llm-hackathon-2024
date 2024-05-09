@@ -15,7 +15,7 @@ from codeinterpreterapi import File
 
 
 # Allow the LLM to see more of the Python output
-settings.MAX_OUTPUT_LENGTH = 1000
+settings.MAX_OUTPUT_LENGTH = 100000
 
 TOOL_DESCRIPTION = """Input a string of code to a ipython interpreter.
 Write the entire code in a single-line string.

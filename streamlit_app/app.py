@@ -19,9 +19,7 @@ from streamlit_callback import CustomStreamlitCallbackHandler
 load_dotenv(find_dotenv())
 
 DATALAB_API_PROMPT: str = (Path(__file__).parent.parent / "prompts" / "datalab-api-prompt.md").read_text()
-MODEL_NAME = "claude-3-haiku-20240307"
-# MODEL_NAME = "claude-3-sonnet-20240229"
-# MODEL_NAME = "claude-3-opus-20240229"
+MODEL_NAME = "claude-3-opus-20240229"
 
 SYSTEM_PROMPT = f"""You are a virtual data managment assistant that helps materials chemists
 manage their experimental data and plan experiments. 
