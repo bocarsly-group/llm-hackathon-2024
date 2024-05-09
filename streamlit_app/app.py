@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import base64
 
 from langchain.tools import DuckDuckGoSearchRun
 from langchain.agents import create_tool_calling_agent, AgentExecutor
@@ -7,13 +8,15 @@ from langchain.agents.tools import Tool
 from langchain_anthropic import ChatAnthropic
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-
+from langchain_core.prompts.image import ImagePromptTemplate
+from langchain_core.messages import HumanMessage
 
 from langchain.agents import initialize_agent
 from langchain.chains import LLMMathChain
 from langchain.memory import ConversationBufferMemory
 from langchain.callbacks import StreamlitCallbackHandler
 import streamlit as st
+from st_multimodal_chatinput import multimodal_chatinput
 
 
 from dotenv import load_dotenv, find_dotenv
@@ -83,14 +86,50 @@ for message in st.session_state.messages:
 
 # Capture the user's input
 question = st.chat_input("Give me a task or ask me any question")
+uploaded_file = st.file_uploader("Choose a file")
+
+
+#     content: [
+#         {
+#             "type": "image_url",
+#     image_url: "data:image/jpeg;base64,{base64Image}",
+#   },
+# ],
 
 if question:
+    if uploaded_file is not None:
+        encoded_string = base64.b64encode(uploaded_file.getvalue()).decode("utf-8")
+        # st.write(bytes_data)
+        message = HumanMessage(
+            content=[
+                {
+                    "type": "text",
+                    "text": question,
+                },
+                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{encoded_string}"}},
+            ]
+        )
+        print("CREATED A NEW MESSAGE:")
+        print(message.content)
+    else:
+        message = HumanMessage(content=[{"type": "text", "text": question}])
+    # base64ImageMessage = HumanMessage(
+    #     content=[
+    #         {
+    #             "type": "image_url",
+    #             "image_url": "https://avatars.githubusercontent.com/u/126733545?s=200&v=4",
+    #         }
+    #     ]
+    # )
+
+    # print(base64ImageMessage)
+
     # Add the user's question to the chat container
     with st.chat_message("user"):
         st.markdown(question)
 
     # Save the user's message to the session state
-    st.session_state.messages.append({"role": "user", "content": question})
+    st.session_state.messages.append({"role": "user", "content": message.content})
 
     # Set up the Streamlit callback handler
     st_callback = CustomStreamlitCallbackHandler(st.container(), max_thought_containers=20, expand_new_thoughts=True)
