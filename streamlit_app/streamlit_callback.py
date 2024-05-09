@@ -1,4 +1,5 @@
 """Our hacked callback + LLM thought to better show code blocks for our codebox tool."""
+
 from __future__ import annotations
 
 import time
@@ -26,6 +27,7 @@ def _convert_newlines(text: str) -> str:
     (space, space, newline).
     """
     return text.replace("\n", "  \n")
+
 
 # The maximum length of the "input_str" portion of a tool label.
 # Strings that are longer than this will be truncated with "..."
@@ -177,10 +179,16 @@ class LLMThought:
             state="running",
         )
         # output is printed later in on_tool_end
-        import json
-        code_from_json = json.loads(input_str.replace('\"', '\\"').replace("'", '"')).get('code', '')
-        code_input_str = f"```python\n{code_from_json}\n```"
-        self._container.markdown(f"**Input:**\n\n{code_input_str}\n\n**Output:**")
+        try:
+            code_from_json = input_str[10:-2].replace(
+                "\\n", "\n"
+            )  # hack to avoid worrying about escpaing
+            code_input_str = f"```python\n{code_from_json}\n```"
+            self._container.markdown(f"**Input:**\n\n{code_input_str}\n\n")
+            self._container.update()
+        except Exception:
+            code_input_str = f"```json\n{input_str}\n```"
+            self._container.markdown(f"**Input:**\n\n{code_input_str}\n\n")
 
     def on_tool_end(
         self,
@@ -190,7 +198,19 @@ class LLMThought:
         llm_prefix: str | None = None,
         **kwargs: Any,
     ) -> None:
-        self._container.markdown(output)
+        self._container.markdown("**Output**:\n\n")
+
+        if "text" in output:
+            self._container.markdown(output["text"])
+            self._container.update()
+
+        if "b64-image" in output:
+            self._container.image(output["b64-image"])
+            self._container.update()
+
+        if "bokeh" in output:
+            self._container.html(output["bokeh"])
+            self._container.update()
 
     def on_tool_error(self, error: BaseException, *args: Any, **kwargs: Any) -> None:
         self._container.markdown("**Tool encountered an error...**")
