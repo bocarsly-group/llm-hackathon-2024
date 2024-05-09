@@ -1,5 +1,5 @@
 import os
-import time
+from pathlib import Path
 
 from langchain.tools import DuckDuckGoSearchRun
 from langchain.agents import create_tool_calling_agent, AgentExecutor
@@ -18,14 +18,17 @@ import streamlit as st
 
 from dotenv import load_dotenv, find_dotenv
 
-from tools import codeboxtool
+from tools import local_codebox_tool
 
 load_dotenv(find_dotenv())
 
+DATALAB_API_PROMPT: str = (Path(__file__).parent.parent / "prompts" / "datalab-api-prompt.md").read_text()
 MODEL_NAME = "claude-3-haiku-20240307"
-SYSTEM_PROMPT = """You are a virtual data managment assistant that helps materials chemists
+SYSTEM_PROMPT = f"""You are a virtual data managment assistant that helps materials chemists
 manage their experimental data and plan experiments. 
-You can use a code interpreter tool to assist you (only if needed)."""
+You can use a code interpreter tool to assist you (only if needed).
+Here is some more info about the datalab API: {DATALAB_API_PROMPT}"""
+
 
 
 if MODEL_NAME.startswith("claude"):
@@ -61,6 +64,7 @@ search = DuckDuckGoSearchRun()
 # llm_math_chain = LLMMathChain(llm=llm, verbose=True)
 
 tools = [
+    local_codebox_tool,
     # Tool(
     #     name="Calculator",
     #     func=llm_math_chain.run,
@@ -71,7 +75,7 @@ tools = [
     #     func=search.run,
     #     description="Useful for internet searches when information isn't readily available.",
     # ),
-    codeboxtool,
+    # codeboxtool,
 ]
 
 # bind tools
@@ -87,7 +91,7 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 # Capture the user's input
-question = st.chat_input("Ask me any question")
+question = st.chat_input("Give me a task or ask me any question")
 
 if question:
     # Add the user's question to the chat container
@@ -98,12 +102,18 @@ if question:
     st.session_state.messages.append({"role": "user", "content": question})
 
     # Set up the Streamlit callback handler
-    st_callback = StreamlitCallbackHandler(st.container())
+    st_callback = StreamlitCallbackHandler(
+        st.container(), max_thought_containers=20, expand_new_thoughts=True
+    )
 
-    response = agent_executor.invoke({"chat_history": st.session_state.messages}, {"callbacks": [st_callback]})
+    response = agent_executor.invoke(
+        {"chat_history": st.session_state.messages}, {"callbacks": [st_callback]}
+    )
 
     with st.chat_message("assistant"):
         st.markdown(response["output"])
+
+    breakpoint()
 
     # # Generate the assistant's response
     # with st.chat_message("assistant"):
@@ -125,4 +135,6 @@ if question:
     #     message_placeholder.markdown(response["content"])
 
     # Save the assistant's response to the session state
-    st.session_state.messages.append({"role": "assistant", "content": response["output"]})
+    st.session_state.messages.append(
+        {"role": "assistant", "content": response["output"]}
+    )
