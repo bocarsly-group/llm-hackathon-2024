@@ -19,6 +19,7 @@ import streamlit as st
 from dotenv import load_dotenv, find_dotenv
 
 from tools import local_codebox_tool
+from streamlit_callback import CustomStreamlitCallbackHandler
 
 load_dotenv(find_dotenv())
 
@@ -102,7 +103,7 @@ if question:
     st.session_state.messages.append({"role": "user", "content": question})
 
     # Set up the Streamlit callback handler
-    st_callback = StreamlitCallbackHandler(
+    st_callback = CustomStreamlitCallbackHandler(
         st.container(), max_thought_containers=20, expand_new_thoughts=True
     )
 
@@ -112,8 +113,6 @@ if question:
 
     with st.chat_message("assistant"):
         st.markdown(response["output"])
-
-    breakpoint()
 
     # # Generate the assistant's response
     # with st.chat_message("assistant"):
