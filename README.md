@@ -5,7 +5,7 @@ Working repository for Team [*datalab*](https://github.com/the-grey-group/datala
 ## Plan
 
 Create an LLM-based agent that can interact with the [datalab Python API](https://github.com/datalab-org/datalab-api) so we don't have to implement things ourselves (as developers of datalab).
-This follows on from our work on *Whinchat* 🐦 last year, where we integrated GPT-based models from OpenAI with [*datalab*](https://github.com/the-grey-group/datalab) such that users can interact conversationally with their raw data (see Jablonka *et al*., [0.1039/D3DD00113J](https://doi.org/10.1039/D3DD00113J)).
+This follows on from our work on *Whinchat* 🐦 last year, where we integrated GPT-based models from OpenAI with [*datalab*](https://github.com/the-grey-group/datalab) such that users can interact conversationally with their raw data (see Jablonka *et al*., [10.1039/D3DD00113J](https://doi.org/10.1039/D3DD00113J)).
 
 Potential applications:
 
@@ -15,7 +15,7 @@ Potential applications:
 
 ### Log of experiments
 
-- [`playground/summarise_public_datalab.py`] Using [shroominic/codeinterpreter-api](https://github.com/shroominic/codeinterpreter-api/blob/main/pyproject.toml) to generate Python scripts that are executed locally that do the prompted task.
+- [`playground/summarise_public_datalab.py`](https://github.com/bocarsly-group/llm-hackathon-2024/blob/main/playground/summarise_public_datalab.py) Using [shroominic/codeinterpreter-api](https://github.com/shroominic/codeinterpreter-api/blob/main/pyproject.toml) to generate Python scripts that are executed locally that do the prompted task.
    - Works up to a point (at least with latest models, e.g., Claude 3 Opus [expensive]) but requires lots of back-and-forth to generate valid code.
    - Most of the problems are related to either
       1. eccentricities of our API (e.g., needing to know ahead of time magic strings for item types and otherwise)
