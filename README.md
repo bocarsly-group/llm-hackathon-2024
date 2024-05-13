@@ -2,6 +2,8 @@
 
 Working repository for Team [*datalab*](https://github.com/the-grey-group/datalab) in the [2024 LLM Hackathon for Applications in Materials & Chemistry](https://www.eventbrite.com/e/llm-hackathon-for-applications-in-materials-and-chemistry-tickets-868303598437).
 
+## [📹 Final demo video (link)](https://www.youtube.com/watch?v=mbeKdJJmtWA)
+
 ## Plan
 
 Create an LLM-based agent that can interact with the [datalab Python API](https://github.com/datalab-org/datalab-api) so we don't have to implement things ourselves (as developers of datalab).
