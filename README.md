@@ -1,4 +1,4 @@
-# llm-hackathon-2024
+# yeLLowhaMmer 
 
 Working repository for Team [*datalab*](https://github.com/the-grey-group/datalab) in the [2024 LLM Hackathon for Applications in Materials & Chemistry](https://www.eventbrite.com/e/llm-hackathon-for-applications-in-materials-and-chemistry-tickets-868303598437).
 
