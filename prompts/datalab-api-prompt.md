@@ -26,7 +26,7 @@ This package implements basic functionality for displaying and manipulating entr
 ```python
 from datalab_api import DatalabClient
 
-with DatalabClient("https://public.api.odbx.science") as client:
+with DatalabClient("https://demo-api.datalab-org.io") as client:
 
     # Get the info about this datalab instance
     client.get_info()
