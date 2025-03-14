@@ -21,9 +21,10 @@ load_dotenv(find_dotenv())
 
 DATALAB_API_PROMPT: str = (Path(__file__).parent.parent / "prompts" / "datalab-api-prompt.md").read_text()
 MODEL_OPTIONS = {
-    "Claude 3 Haiku": "claude-3-haiku-20240307",
-    "Claude 3 Sonnet": "claude-3-sonnet-20240229",
+    "Claude 3 Haiku": "claude-3-5-haiku-latest",
+    "Claude 3.7 Sonnet": "claude-3-7-sonnet-latest",
     "GPT-4o": "gpt-4o",
+    "OpenAI o3-mini": "o3-mini",
     "GPT-3.5 Turbo": "gpt-3.5-turbo"
 }
 DEFAULT_MODEL = "claude-3-haiku-20240307"
@@ -67,7 +68,7 @@ def get_llm():
             anthropic_api_key=st.session_state.anthropic_api_key,
             model=model_name,
         )
-    elif model_name.startswith("gpt"):
+    elif model_name.startswith("gpt") or model_name.startswith("o3"):
         if not st.session_state.openai_api_key:
             return None
         return ChatOpenAI(
