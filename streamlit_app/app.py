@@ -19,13 +19,15 @@ from streamlit_callback import CustomStreamlitCallbackHandler
 # Load environment variables but we'll prioritize user-provided keys
 load_dotenv(find_dotenv())
 
-DATALAB_API_PROMPT: str = (Path(__file__).parent.parent / "prompts" / "datalab-api-prompt.md").read_text()
+DATALAB_API_PROMPT: str = (
+    Path(__file__).parent.parent / "prompts" / "datalab-api-prompt.md"
+).read_text()
 MODEL_OPTIONS = {
     "Claude 3 Haiku": "claude-3-5-haiku-latest",
     "Claude 3.7 Sonnet": "claude-3-7-sonnet-latest",
     "GPT-4o": "gpt-4o",
     "OpenAI o3-mini": "o3-mini",
-    "GPT-3.5 Turbo": "gpt-3.5-turbo"
+    "GPT-3.5 Turbo": "gpt-3.5-turbo",
 }
 DEFAULT_MODEL = "claude-3-haiku-20240307"
 
@@ -39,28 +41,30 @@ Here is some more info about the datalab API: {DATALAB_API_PROMPT}"""
 
 codebox = LocalCodeBoxToolRunManager.instance().codebox
 
+
 def initialize_api_keys():
     """Initialize API keys from session state or environment variables"""
     # Set up session state for API keys if not already present
     if "api_keys_submitted" not in st.session_state:
         st.session_state.api_keys_submitted = False
-    
+
     if "anthropic_api_key" not in st.session_state:
         st.session_state.anthropic_api_key = os.environ.get("ANTHROPIC_API_KEY", "")
-    
+
     if "openai_api_key" not in st.session_state:
         st.session_state.openai_api_key = os.environ.get("OPENAI_API_KEY", "")
-    
+
     if "datalab_api_key" not in st.session_state:
         st.session_state.datalab_api_key = os.environ.get("DATALAB_API_KEY", "")
-    
+
     if "selected_model" not in st.session_state:
         st.session_state.selected_model = DEFAULT_MODEL
+
 
 def get_llm():
     """Get the LLM based on the selected model and API keys"""
     model_name = st.session_state.selected_model
-    
+
     if model_name.startswith("claude"):
         if not st.session_state.anthropic_api_key:
             return None
@@ -76,6 +80,7 @@ def get_llm():
             model=model_name,
         )
     return None
+
 
 messages_template = ChatPromptTemplate.from_messages(
     [
@@ -93,46 +98,49 @@ initialize_api_keys()
 # Create sidebar for API key inputs
 with st.sidebar:
     st.header("API Keys")
-    
+
     with st.form("api_keys_form"):
         st.selectbox(
             "Select LLM Model",
             options=list(MODEL_OPTIONS.keys()),
-            index=list(MODEL_OPTIONS.values()).index(st.session_state.selected_model) if st.session_state.selected_model in MODEL_OPTIONS.values() else 0,
-            key="model_selection"
+            index=list(MODEL_OPTIONS.values()).index(st.session_state.selected_model)
+            if st.session_state.selected_model in MODEL_OPTIONS.values()
+            else 0,
+            key="model_selection",
         )
-        
+
         st.text_input(
             "Anthropic API Key (for Claude models)",
             value=st.session_state.anthropic_api_key,
             type="password",
-            key="anthropic_key_input"
+            key="anthropic_key_input",
         )
-        
+
         st.text_input(
             "OpenAI API Key (for GPT models)",
             value=st.session_state.openai_api_key,
             type="password",
-            key="openai_key_input"
+            key="openai_key_input",
         )
-        
+
         st.text_input(
             "Datalab API Key",
             value=st.session_state.datalab_api_key,
             type="password",
-            key="datalab_key_input"
+            key="datalab_key_input",
         )
-        
+
         submit_button = st.form_submit_button("Save API Keys")
-        
+
         if submit_button:
             st.session_state.anthropic_api_key = st.session_state.anthropic_key_input
             st.session_state.openai_api_key = st.session_state.openai_key_input
             st.session_state.datalab_api_key = st.session_state.datalab_key_input
-            st.session_state.selected_model = MODEL_OPTIONS[st.session_state.model_selection]
+            st.session_state.selected_model = MODEL_OPTIONS[
+                st.session_state.model_selection
+            ]
             st.session_state.api_keys_submitted = True
             st.success("API keys saved!")
->>>>>>> 6bed922 (feat: Add API key input and model selection to Streamlit app)
 
 # Initialize the session state for chat messages
 if "messages" not in st.session_state:
@@ -147,12 +155,19 @@ with st.sidebar:
     if st.session_state.files:
         for file in st.session_state.files:
             with open(os.path.join(".codebox", file.name), "rb") as f:
-                btn = st.download_button(label=file.name, data=f.read(), file_name=file.name, mime="image/png")
+                btn = st.download_button(
+                    label=file.name,
+                    data=f.read(),
+                    file_name=file.name,
+                    mime="image/png",
+                )
 
 # Check if required API keys are provided
 llm = get_llm()
 if not llm:
-    st.warning("Please provide the appropriate API key for your selected model in the sidebar.")
+    st.warning(
+        "Please provide the appropriate API key for your selected model in the sidebar."
+    )
     st.stop()
 
 tools = [local_codebox_tool]
@@ -204,7 +219,12 @@ if question:
                         "type": "text",
                         "text": question,
                     },
-                    {"type": "image_url", "image_url": {"url": f"data:{uploaded_file.type};base64,{encoded_string}"}},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:{uploaded_file.type};base64,{encoded_string}"
+                        },
+                    },
                 ]
             )
 
@@ -229,12 +249,18 @@ if question:
     st.session_state.messages.append({"role": "user", "content": message.content})
 
     # Set up the Streamlit callback handler
-    st_callback = CustomStreamlitCallbackHandler(st.container(), max_thought_containers=20, expand_new_thoughts=True)
+    st_callback = CustomStreamlitCallbackHandler(
+        st.container(), max_thought_containers=20, expand_new_thoughts=True
+    )
 
-    response = agent_executor.invoke({"chat_history": st.session_state.messages}, {"callbacks": [st_callback]})
+    response = agent_executor.invoke(
+        {"chat_history": st.session_state.messages}, {"callbacks": [st_callback]}
+    )
 
     with st.chat_message("assistant"):
         st.markdown(response["output"])
 
     # Save the assistant's response to the session state
-    st.session_state.messages.append({"role": "assistant", "content": response["output"]})
+    st.session_state.messages.append(
+        {"role": "assistant", "content": response["output"]}
+    )
