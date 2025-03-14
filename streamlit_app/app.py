@@ -16,12 +16,19 @@ from dotenv import load_dotenv, find_dotenv
 from tools import local_codebox_tool, LocalCodeBoxToolRunManager
 from streamlit_callback import CustomStreamlitCallbackHandler
 
+# Load environment variables but we'll prioritize user-provided keys
 load_dotenv(find_dotenv())
 
 DATALAB_API_PROMPT: str = (Path(__file__).parent.parent / "prompts" / "datalab-api-prompt.md").read_text()
-MODEL_NAME = "claude-3-haiku-20240307"
+MODEL_OPTIONS = {
+    "Claude 3 Haiku": "claude-3-haiku-20240307",
+    "Claude 3 Sonnet": "claude-3-sonnet-20240229",
+    "GPT-4o": "gpt-4o",
+    "GPT-3.5 Turbo": "gpt-3.5-turbo"
+}
+DEFAULT_MODEL = "claude-3-haiku-20240307"
 
-SYSTEM_PROMPT = f"""You are a virtual data managment assistant that helps materials chemists
+SYSTEM_PROMPT = f"""You are a virtual data management assistant that helps materials chemists
 manage their experimental data and plan experiments. 
 You can use a code interpreter tool to assist you (only if needed). If you use the code interpreter, 
 DO NOT EXPLAIN THE CODE. Instead, just use the output of the code
@@ -31,16 +38,43 @@ Here is some more info about the datalab API: {DATALAB_API_PROMPT}"""
 
 codebox = LocalCodeBoxToolRunManager.instance().codebox
 
-if MODEL_NAME.startswith("claude"):
-    llm = ChatAnthropic(
-        anthropic_api_key=os.environ.get("ANTHROPIC_API_KEY"),
-        model=MODEL_NAME,
-    )
-elif MODEL_NAME.startswith("gpt"):
-    llm = ChatOpenAI(
-        api_key=os.environ.get("OPENAI_API_KEY"),
-        model=MODEL_NAME,
-    )
+def initialize_api_keys():
+    """Initialize API keys from session state or environment variables"""
+    # Set up session state for API keys if not already present
+    if "api_keys_submitted" not in st.session_state:
+        st.session_state.api_keys_submitted = False
+    
+    if "anthropic_api_key" not in st.session_state:
+        st.session_state.anthropic_api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    
+    if "openai_api_key" not in st.session_state:
+        st.session_state.openai_api_key = os.environ.get("OPENAI_API_KEY", "")
+    
+    if "datalab_api_key" not in st.session_state:
+        st.session_state.datalab_api_key = os.environ.get("DATALAB_API_KEY", "")
+    
+    if "selected_model" not in st.session_state:
+        st.session_state.selected_model = DEFAULT_MODEL
+
+def get_llm():
+    """Get the LLM based on the selected model and API keys"""
+    model_name = st.session_state.selected_model
+    
+    if model_name.startswith("claude"):
+        if not st.session_state.anthropic_api_key:
+            return None
+        return ChatAnthropic(
+            anthropic_api_key=st.session_state.anthropic_api_key,
+            model=model_name,
+        )
+    elif model_name.startswith("gpt"):
+        if not st.session_state.openai_api_key:
+            return None
+        return ChatOpenAI(
+            api_key=st.session_state.openai_api_key,
+            model=model_name,
+        )
+    return None
 
 messages_template = ChatPromptTemplate.from_messages(
     [
@@ -50,7 +84,54 @@ messages_template = ChatPromptTemplate.from_messages(
 )
 
 # st.set_page_config(layout="wide")
-st.title("Materials data analysis agent")
+st.title("Materials Data Analysis Agent")
+
+# Initialize API keys
+initialize_api_keys()
+
+# Create sidebar for API key inputs
+with st.sidebar:
+    st.header("API Keys")
+    
+    with st.form("api_keys_form"):
+        st.selectbox(
+            "Select LLM Model",
+            options=list(MODEL_OPTIONS.keys()),
+            index=list(MODEL_OPTIONS.values()).index(st.session_state.selected_model) if st.session_state.selected_model in MODEL_OPTIONS.values() else 0,
+            key="model_selection"
+        )
+        
+        st.text_input(
+            "Anthropic API Key (for Claude models)",
+            value=st.session_state.anthropic_api_key,
+            type="password",
+            key="anthropic_key_input"
+        )
+        
+        st.text_input(
+            "OpenAI API Key (for GPT models)",
+            value=st.session_state.openai_api_key,
+            type="password",
+            key="openai_key_input"
+        )
+        
+        st.text_input(
+            "Datalab API Key",
+            value=st.session_state.datalab_api_key,
+            type="password",
+            key="datalab_key_input"
+        )
+        
+        submit_button = st.form_submit_button("Save API Keys")
+        
+        if submit_button:
+            st.session_state.anthropic_api_key = st.session_state.anthropic_key_input
+            st.session_state.openai_api_key = st.session_state.openai_key_input
+            st.session_state.datalab_api_key = st.session_state.datalab_key_input
+            st.session_state.selected_model = MODEL_OPTIONS[st.session_state.model_selection]
+            st.session_state.api_keys_submitted = True
+            st.success("API keys saved!")
+>>>>>>> 6bed922 (feat: Add API key input and model selection to Streamlit app)
 
 # Initialize the session state for chat messages
 if "messages" not in st.session_state:
@@ -59,11 +140,19 @@ if "messages" not in st.session_state:
 if "files" not in st.session_state:
     st.session_state.files = codebox.list_files()
 
-if st.session_state.files:
-    st.sidebar.write("Files in codebox:")
-    for file in st.session_state.files:
-        with open(os.path.join(".codebox", file.name), "rb") as f:
-            btn = st.sidebar.download_button(label=file.name, data=f.read(), file_name=file.name, mime="image/png")
+# Display files in sidebar
+with st.sidebar:
+    st.header("Files")
+    if st.session_state.files:
+        for file in st.session_state.files:
+            with open(os.path.join(".codebox", file.name), "rb") as f:
+                btn = st.download_button(label=file.name, data=f.read(), file_name=file.name, mime="image/png")
+
+# Check if required API keys are provided
+llm = get_llm()
+if not llm:
+    st.warning("Please provide the appropriate API key for your selected model in the sidebar.")
+    st.stop()
 
 tools = [local_codebox_tool]
 
