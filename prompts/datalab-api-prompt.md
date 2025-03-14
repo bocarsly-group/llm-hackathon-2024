@@ -10,6 +10,8 @@ The rest of this prompt contains the README for the datalab API package (called 
 When using this package, you MUST set the `DATALAB_API_KEY` as an environment variable.
 It may have already been set by the time you execute it.
 
+The `DATALAB_API_URL` has been chosen by the user to be: {{ DATALAB_API_URL }}.
+
 A simple Python API that can interact with [*datalab*](https://github.com/the-grey-group/datalab) instances.
 
 ## Usage
@@ -26,7 +28,7 @@ This package implements basic functionality for displaying and manipulating entr
 ```python
 from datalab_api import DatalabClient
 
-with DatalabClient("https://demo-api.datalab-org.io") as client:
+with DatalabClient(DATALAB_API_URL) as client:
 
     # Get the info about this datalab instance
     client.get_info()

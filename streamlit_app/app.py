@@ -31,6 +31,8 @@ MODEL_OPTIONS = {
 }
 DEFAULT_MODEL = "claude-3-haiku-20240307"
 
+DEFAULT_DATALAB_API_URL = "https://demo.datalab-org.io"
+
 SYSTEM_PROMPT = f"""You are a virtual data management assistant that helps materials chemists
 manage their experimental data and plan experiments. 
 You can use a code interpreter tool to assist you (only if needed). If you use the code interpreter, 
@@ -56,6 +58,9 @@ def initialize_api_keys():
 
     if "datalab_api_key" not in st.session_state:
         st.session_state.datalab_api_key = os.environ.get("DATALAB_API_KEY", "")
+
+    if "datalab_api_url" not in st.session_state:
+        st.session_state.datalab_api_url = DEFAULT_DATALAB_API_URL
 
     if "selected_model" not in st.session_state:
         st.session_state.selected_model = DEFAULT_MODEL
@@ -124,6 +129,12 @@ with st.sidebar:
         )
 
         st.text_input(
+            "Datalab API URL",
+            value=st.session_state.datalab_api_url,
+            key="datalab_api_url_input",
+        )
+
+        st.text_input(
             "Datalab API Key",
             value=st.session_state.datalab_api_key,
             type="password",
@@ -136,6 +147,7 @@ with st.sidebar:
             st.session_state.anthropic_api_key = st.session_state.anthropic_key_input
             st.session_state.openai_api_key = st.session_state.openai_key_input
             st.session_state.datalab_api_key = st.session_state.datalab_key_input
+            st.session_state.datalab_api_url = st.session_state.datalab_api_url_input
             st.session_state.selected_model = MODEL_OPTIONS[
                 st.session_state.model_selection
             ]
@@ -144,7 +156,7 @@ with st.sidebar:
 
 # Initialize the session state for chat messages
 if "messages" not in st.session_state:
-    st.session_state.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    st.session_state.messages = [{"role": "system", "content": SYSTEM_PROMPT.replace("{{ DATALAB_API_URL }}", st.session_state.datalab_api_url)}]
 
 if "files" not in st.session_state:
     st.session_state.files = codebox.list_files()
@@ -202,7 +214,6 @@ uploaded_file = st.file_uploader("Choose a file")
 
 if question:
     if uploaded_file is not None:
-        # breakpoint()
         file_bytes = uploaded_file.getvalue()
         with open(os.path.join(".codebox", uploaded_file.name), "wb") as f:
             f.write(file_bytes)
