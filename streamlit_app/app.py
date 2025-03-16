@@ -98,17 +98,18 @@ messages_template = ChatPromptTemplate.from_messages(
 st.title("Materials Data Analysis Agent")
 
 st.markdown("""
-### Welcome to the Materials Data Analysis Assistant
+This tool helps materials chemists manage experimental data in [datalab](https://github.com/datalab-org/datalab).
 
-This tool helps materials chemists manage experimental data and plan experiments. You can:
+You can use this interface to execute code that uses the [datalab Python API](https://github.com/datalab-org/datalab-python-api)
+to view, analyze and generally manage your data.
 
-- **Upload data files** for analysis
-- **Ask questions** about your materials data
-- **Get help planning** new experiments
-- **Visualize results** using the built-in code interpreter
+Simply upload any files and ask questions in natural language, for example:
 
-The assistant uses AI to understand your needs and can execute Python code to analyze your data.
-Simply upload your files and ask questions in natural language.
+- List my samples of NaCoO2
+- Upload the XRD pattern `data.xyz` to the sample and make a data block.
+
+For the latest iteration of this tool, please see the [yellowhammer repository](https://github.com/datalab-org/yellowhammer) which
+features a Jupyter notebook interface with the same functionality.
 """)
 
 # Initialize API keys
