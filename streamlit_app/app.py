@@ -97,6 +97,20 @@ messages_template = ChatPromptTemplate.from_messages(
 # st.set_page_config(layout="wide")
 st.title("Materials Data Analysis Agent")
 
+st.markdown("""
+### Welcome to the Materials Data Analysis Assistant
+
+This tool helps materials chemists manage experimental data and plan experiments. You can:
+
+- **Upload data files** for analysis
+- **Ask questions** about your materials data
+- **Get help planning** new experiments
+- **Visualize results** using the built-in code interpreter
+
+The assistant uses AI to understand your needs and can execute Python code to analyze your data.
+Simply upload your files and ask questions in natural language.
+""")
+
 # Initialize API keys
 initialize_api_keys()
 
